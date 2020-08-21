@@ -1,13 +1,13 @@
 <p align="center">
   <a href="https://github.com/doncabreraphone/victorhugo/">
-    <img src="https://github.com/doncabreraphone/victorhugo/blob/master/misc/victorhugo__logo.png" alt="Victor Hugo logo" width="260" height="254" style="margin-bottom: -40px;">
+    <img src="https://github.com/doncabreraphone/victorhugo/blob/master/misc/victorhugo__logo.png" alt="Victor Hugo logo" width="260" height="254" style="margin-bottom: -70px;">
   </a>
 </p>
 
-<h3 align="center">Victor Hugo</h3>
+<h3 align="center" style="margin-top: -40px;">Victor Hugo</h3>
 
 <p align="center">
-  The first and only search engine optimization plug-in for the Hugo static site generator framework. Victor Hugo helps you write good SEO content, the easy way.
+  The first and only search engine optimization plug-in for the Hugo static site generator framework.<br>Victor Hugo helps you write good SEO content, the easy way.
   <br>
   <br>
   <a href="https://github.com/doncabreraphone/victorhugo/issues">Report bug</a>
