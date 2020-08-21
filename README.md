@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/doncabreraphone/victorhugo/">
-    <img src="https://github.com/doncabreraphone/victorhugo/blob/master/misc/victorhugo__logo.png" alt="Victor Hugo logo" width="380" height="371">
+    <img src="https://github.com/doncabreraphone/victorhugo/blob/master/misc/victorhugo__logo.png" alt="Victor Hugo logo" width="260" height="254" style="margin-bottom: -40px;">
   </a>
 </p>
 
