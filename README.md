@@ -1,10 +1,10 @@
-<p align="center">
+<p align="center" style="margin-bottom: 0;">
   <a href="https://github.com/doncabreraphone/victorhugo/">
     <img src="https://github.com/doncabreraphone/victorhugo/blob/master/misc/victorhugo__logo.png" alt="Victor Hugo logo" width="260" height="254" style="margin-bottom: -70px;">
   </a>
 </p>
 
-<h3 align="center" style="margin-top: -40px;">
+<h3 align="center" style="margin:0 ; padding: 0;">
 <img src="https://raw.githubusercontent.com/doncabreraphone/victorhugo/8946bd99f351d6c35b643eda497d0b21b1537a48/misc/vh_font.svg">
 </h3>
 
