@@ -4,7 +4,9 @@
   </a>
 </p>
 
-<h3 align="center" style="margin-top: -40px;">Victor Hugo</h3>
+<h3 align="center" style="margin-top: -40px;">
+<img src="https://raw.githubusercontent.com/doncabreraphone/victorhugo/8946bd99f351d6c35b643eda497d0b21b1537a48/misc/vh_font.svg">
+</h3>
 
 <p align="center">
   The first and only search engine optimization plug-in for the Hugo static site generator framework.<br>Victor Hugo helps you write good SEO content, the easy way.
