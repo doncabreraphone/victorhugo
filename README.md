@@ -14,9 +14,14 @@
   <br>
   <a href="https://github.com/doncabreraphone/victorhugo/issues">Report bug</a>
   ·
-  <a href="https://github.com/doncabreraphone/victorhugo/issues">Request feature</a>
-  ·
   <a href="https://gohugo.io/">Hugo</a>
+    ·
+  <a href="https://github.com/doncabreraphone/victorhugo/blob/master/misc/hugo-seo-snippets.md">Seo Snippets</a>
+
+    ·
+  <a href="#say-thanks">Say Thanks</a>
+
+  
 </p>
 
 ## Overview
