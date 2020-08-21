@@ -62,7 +62,7 @@ To use Victor Hugo, all you have to do is:
 
 That's about it. Simple, isn't it?
 
-### Configure
+### Configure Victor Hugo
 You need to add these two Params in the _front matter_ of any post you want Victor Hugo to run SEO checks.
 
 ```
@@ -74,7 +74,7 @@ Focus_Keyword: ""
 
 **Focus_Keyword:** the word or phrase Victor Hugo will use to run a check on your copy—including the SEO title, H1 tag, body copy, and images. This is the keyword or phrase that you want your post to be found for in search engines. Victor Hugo will let you know how well you have optimized your copy for this keyword or phrase.
 
-Example:
+### Examples
 ```
 Focus_Keyword: "Yoast Plugin for WordPress"
 ```
