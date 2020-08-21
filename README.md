@@ -17,7 +17,6 @@
   <a href="https://gohugo.io/">Hugo</a>
     ·
   <a href="https://github.com/doncabreraphone/victorhugo/blob/master/misc/hugo-seo-snippets.md">Seo Snippets</a>
-
     ·
   <a href="#say-thanks">Say Thanks</a>
 
