@@ -13,8 +13,6 @@
   <br>
   <br>
   <a href="https://github.com/doncabreraphone/victorhugo/issues">Report bug</a>
-  ·
-  <a href="https://gohugo.io/">Hugo</a>
     ·
   <a href="https://github.com/doncabreraphone/victorhugo/blob/master/misc/hugo-seo-snippets.md">Seo Snippets</a>
     ·
@@ -25,7 +23,9 @@
 
 ## Overview
 
-Victor Hugo is a SEO plugin for Hugo, the way Yoast is a plugin SEO for WordPress. It works on the client-side and will never get exported into your final public build.
+Victor Hugo is a SEO plugin for <a href="https://gohugo.io/">Hugo</a>, the world’s fastest framework for building websites. 
+
+**No browser extensions, no external services, no installs. Just a simple partial. One line of code and you are ready to write SEO friendly content with Victor Hugo.**
 
 When writing a blog post, Victor Hugo will:
 * Check for stop words in your page slug.
@@ -34,9 +34,9 @@ When writing a blog post, Victor Hugo will:
 * Help you write SEO friendly meta descriptions
 * Run your copy through an included version of the <a href="https://en.wikipedia.org/wiki/Flesch%E2%80%93Kincaid_readability_tests" target="_blank">Flesch Reading Ease Test</a>, and give you an easy-to-read score.
 
-...and more, much more. 
+...and more, much more, right in your browser. 
 
-Victor Hugo will basically help you write optimized SEO content from the get-go, so you don't have to do it later when your blog post is already online.
+Victor Hugo will help you write optimized SEO content from the get-go, so you don't have to do it later when your blog post is already online.
 
 ## Install
 
