@@ -85,9 +85,11 @@ Victor_Hugo: "true"
 Focus_Keyword: ""
 ```
 
-**VictorHugo:** accepts true or false. Without this Param, Victor Hugo won't work.
+**Victor_Hugo:** accepts true or false. Without this Param, Victor Hugo won't work.
 
 **Focus_Keyword:** the word or phrase Victor Hugo will use to run a check on your copy—including the SEO title, H1 tag, body copy, and images. This is the keyword or phrase that you want your post to be found for in search engines. Victor Hugo will let you know how well you have optimized your copy for this keyword or phrase.
+
+**Victor_Hugo_Clean:** accepts true or false. If false, it will not import jQuery. If it is set to true, it will import jQuery. Note that the jQuery Library won't be added to your project, it will only be used through jQuery's official CDN and it is necessary for Victor Hugo to run.
 
 ### Examples
 ```
