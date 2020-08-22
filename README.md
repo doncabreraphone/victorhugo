@@ -20,16 +20,20 @@
   
 </p>
 
- <video style="width:100%; margin: 15px 0;" controls>
+ <!-- <video style="width:100%; margin: 15px 0;" controls>
   <source src="https://i.imgur.com/2o0sjKY.mp4" type="video/mp4">
   Your browser does not support the video tag.
-</video> 
+</video>  -->
 
 ## Overview
 
 Victor Hugo is a SEO plugin for <a href="https://gohugo.io/">Hugo</a>, the world’s fastest framework for building websites. It audits your content as you write it and gives you an estimate based on best SEO practices, so you can improve your SERP (Search Engine Results Pages).
 
 **Victor Hugo uses no browser extensions, no external services, no installs. It lives in a simple partial. One line of code and you are ready to write SEO-friendly content.**
+
+<p style="text-align:center">
+<img src="https://github.com/doncabreraphone/victorhugo/blob/master/misc/victorhugo_readme_img.jpg">
+</p>
 
 When writing a blog post, Victor Hugo will:
 * Check for stop words in your page slug.
@@ -53,7 +57,7 @@ In fact, with Victor Hugo, you only need one file:
 victorhugo.html
 ``
 
-This file contains **everything you need** to run Victor Hugo in your project. 
+This file contains **everything you need** to run Victor Hugo in your project. <a href="https://github.com/doncabreraphone/victorhugo/releases/tag/v1.0-beta">Download the release</a>.
 
 ### Dependencies
 
