@@ -1,0 +1,1573 @@
+{{ if .Site.IsServer }}
+
+{{ if eq .Params.Victor_Hugo "true" }}
+
+    {{ if .Params.focus_keyword }}
+    <!-- Victor Hugo the SEO tool -->
+
+    {{ if eq .Params.clean "true" }}{{ else }}
+    <!-- jQuery import -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+    {{ end }}
+    <script>
+
+
+
+    $(document).ready(function(){
+        // VICTOR HUGO
+        // By Javier Cabrera
+        // https://github.com/doncabreraphone/victorhugo
+
+        // READABILITY SCORE by Ahava
+        // https://www.simoahava.com/analytics/calculate-readability-scores-for-content/
+        // from this github https://github.com/sahava/readability-score-javascript
+        // Many thanks, Simo!
+        // readabilityFunction("{{ .Content }}");
+        
+        function readabilityFunction(text){
+
+        /* To speed the script up, you can set a sampling rate in words. For example, if you set
+        * sampleLimit to 1000, only the first 1000 words will be parsed from the input text.
+        * Set to 0 to never sample.
+        */     
+        var sampleLimit = 1000;
+
+        // Manual rewrite of the textstat Python library (https://github.com/shivam5992/textstat/)
+
+        /* 
+        * Regular expression to identify a sentence. No, it's not perfect. 
+        * Fails e.g. with abbreviations and similar constructs mid-sentence.
+        */
+        var sentenceRegex = new RegExp('[.?!]\\s[^a-z]', 'g');
+
+        /*
+        * Regular expression to identify a syllable. No, it's not perfect either.
+        * It's based on English, so other languages with different vowel / consonant distributions
+        * and syllable definitions need a rewrite.
+        * Inspired by https://bit.ly/2VK9dz1
+        */
+        var syllableRegex = new RegExp('[aiouy]+e*|e(?!d$|ly).|[td]ed|le$', 'g');
+
+        // Baseline for FRE - English only
+        var freBase = {
+          base: 206.835,
+          sentenceLength: 1.015,
+          syllablesPerWord: 84.6,
+          syllableThreshold: 3
+        };
+
+        var cache = {};
+
+        var punctuation = ['!','"','#','$','%','&','\'','(',')','*','+',',','-','.','/',':',';','<','=','>','?','@','[',']','^','_','`','{','|','}','~'];
+
+        var legacyRound = function(number, precision) {
+          var k = Math.pow(10, (precision || 0));
+          return Math.floor((number * k) + 0.5 * Math.sign(number)) / k;
+        };
+
+        var charCount = function(text) {
+          if (cache.charCount) return cache.charCount;
+          if (sampleLimit > 0) text = text.split(' ').slice(0, sampleLimit).join(' ');
+          text = text.replace(/\s/g, '');
+          return cache.charCount = text.length;
+        };
+
+        var removePunctuation = function(text) {
+          return text.split('').filter(function(c) {
+            return punctuation.indexOf(c) === -1;
+          }).join('');
+        };
+
+        var letterCount = function(text) {
+          if (sampleLimit > 0) text = text.split(' ').slice(0, sampleLimit).join(' ');
+          text = text.replace(/\s/g, '');
+          return removePunctuation(text).length;
+        };
+
+        var lexiconCount = function(text, useCache, ignoreSample) {
+          if (useCache && cache.lexiconCount) return cache.lexiconCount;
+          if (ignoreSample !== true && sampleLimit > 0) text = text.split(' ').slice(0, sampleLimit).join(' ');
+          text = removePunctuation(text);
+          var lexicon = text.split(' ').length;
+          return useCache ? cache.lexiconCount = lexicon : lexicon;
+        };
+
+        var getWords = function(text, useCache) {
+          if (useCache && cache.getWords) return cache.getWords;
+          if (sampleLimit > 0) text = text.split(' ').slice(0, sampleLimit).join(' ');
+          text = text.toLowerCase();
+          text = removePunctuation(text);
+          var words = text.split(' ');
+          return useCache ? cache.getWords = words : words;
+        }
+
+        var syllableCount = function(text, useCache) {
+          if (useCache && cache.syllableCount) return cache.syllableCount;
+          var count = 0;
+          var syllables = getWords(text, useCache).reduce(function(a, c) {  
+            return a + (c.match(syllableRegex) || [1]).length;
+          }, 0);
+          return useCache ? cache.syllableCount = syllables : syllables;
+        };
+
+        var polySyllableCount = function(text, useCache) {
+          var count = 0;
+          getWords(text, useCache).forEach(function(word) {
+            var syllables = syllableCount(word);
+            if (syllables >= 3) {
+              count += 1;
+            }
+          });
+          return count;
+        };
+
+        var sentenceCount = function(text, useCache) {
+          if (useCache && cache.sentenceCount) return cache.sentenceCount;
+          if (sampleLimit > 0) text = text.split(' ').slice(0, sampleLimit).join(' ');
+          var ignoreCount = 0;
+          var sentences = text.split(sentenceRegex);
+          sentences.forEach(function(s) {
+            if (lexiconCount(s, true, false) <= 2) { ignoreCount += 1; }
+          });
+          var count = Math.max(1, sentences.length - ignoreCount);
+          return useCache ? cache.sentenceCount = count : count;
+        };
+
+        var avgSentenceLength = function(text) {
+          var avg = lexiconCount(text, true) / sentenceCount(text, true);
+          return legacyRound(avg, 2);
+        };
+
+        var avgSyllablesPerWord = function(text) {
+          var avg = syllableCount(text, true) / lexiconCount(text, true);
+          return legacyRound(avg, 2);
+        };
+
+        var avgCharactersPerWord = function(text) {
+          var avg = charCount(text) / lexiconCount(text, true);
+          return legacyRound(avg, 2);
+        };
+
+        var avgLettersPerWord = function(text) {
+          var avg = letterCount(text, true) / lexiconCount(text, true);
+          return legacyRound(avg, 2);
+        };
+
+        var avgSentencesPerWord = function(text) {
+          var avg = sentenceCount(text, true) / lexiconCount(text, true);
+          return legacyRound(avg, 2);
+        };
+
+        var fleschReadingEase = function(text) {
+          var sentenceLength = avgSentenceLength(text);
+          var syllablesPerWord = avgSyllablesPerWord(text);
+          return legacyRound(
+            freBase.base - 
+            freBase.sentenceLength * sentenceLength - 
+            freBase.syllablesPerWord * syllablesPerWord,
+            2
+          );
+        };
+
+        var fleschKincaidGrade = function(text) {
+          var sentenceLength = avgSentenceLength(text);
+          var syllablesPerWord = avgSyllablesPerWord(text);
+          return legacyRound(
+            0.39 * sentenceLength +
+            11.8 * syllablesPerWord -
+            15.59,
+            2
+          );
+        };
+
+        var smogIndex = function(text) {
+          var sentences = sentenceCount(text, true);
+          if (sentences >= 3) {
+            var polySyllables = polySyllableCount(text, true);
+            var smog = 1.043 * (Math.pow(polySyllables * (30 / sentences), 0.5)) + 3.1291;
+            return legacyRound(smog, 2);
+          }
+          return 0.0;
+        };
+
+        var colemanLiauIndex = function(text) {
+          var letters = legacyRound(avgLettersPerWord(text) * 100, 2);
+          var sentences = legacyRound(avgSentencesPerWord(text) * 100, 2);
+          var coleman = 0.0588 * letters - 0.296 * sentences - 15.8;
+          return legacyRound(coleman, 2);
+        };
+
+        var automatedReadabilityIndex = function(text) {
+          var chars = charCount(text);
+          var words = lexiconCount(text, true);
+          var sentences = sentenceCount(text, true);
+          var a = chars / words;
+          var b = words / sentences;
+          var readability = (
+            4.71 * legacyRound(a, 2) +
+            0.5 * legacyRound(b, 2) -
+            21.43
+          );
+          return legacyRound(readability, 2); 
+        };
+
+        var linsearWriteFormula = function(text) {
+          var easyWord = 0;
+          var difficultWord = 0;
+          var roughTextFirst100 = text.split(' ').slice(0,100).join(' ');
+          var plainTextListFirst100 = getWords(text, true).slice(0,100);
+          plainTextListFirst100.forEach(function(word) {
+            if (syllableCount(word) < 3) {
+              easyWord += 1;
+            } else {
+              difficultWord += 1;
+            }
+          });
+          var number = (easyWord + difficultWord * 3) / sentenceCount(roughTextFirst100);
+          if (number <= 20) {
+            number -= 2;
+          }
+          return legacyRound(number / 2, 2);
+        };
+
+        var rix = function(text) {
+          var words = getWords(text, true);
+          var longCount = words.filter(function(word) {
+            return word.length > 6;
+          }).length;
+          var sentencesCount = sentenceCount(text, true);
+          return legacyRound(longCount / sentencesCount, 2);
+        };
+
+        var readingTime = function(text) {
+          var wordsPerSecond = 4.17;
+          // To get full reading time, ignore cache and sample
+          return legacyRound(lexiconCount(text, false, true) / wordsPerSecond, 2);
+        };
+
+        // Build textStandard
+        var grade = [];
+        var obj = {};
+        (function() {
+          
+          // FRE
+          var fre = obj.fleschReadingEase = fleschReadingEase(text);
+          if (fre < 100 && fre >= 90) {
+            grade.push(5);
+          } else if (fre < 90 && fre >= 80) {
+            grade.push(6);
+          } else if (fre < 80 && fre >= 70) {
+            grade.push(7);
+          } else if (fre < 70 && fre >= 60) {
+            grade.push(8);
+            grade.push(9);
+          } else if (fre < 60 && fre >= 50) {
+            grade.push(10);
+          } else if (fre < 50 && fre >= 40) {
+            grade.push(11);
+          } else if (fre < 40 && fre >= 30) {
+            grade.push(12);
+          } else {
+            grade.push(13);
+          }
+          
+          // FK
+          var fk = obj.fleschKincaidGrade = fleschKincaidGrade(text);
+          grade.push(Math.floor(fk));
+          grade.push(Math.ceil(fk));
+          
+          // SMOG
+          var smog = obj.smogIndex = smogIndex(text);
+          grade.push(Math.floor(smog));
+          grade.push(Math.ceil(smog));
+          
+          // CL
+          var cl = obj.colemanLiauIndex = colemanLiauIndex(text);
+          grade.push(Math.floor(cl));
+          grade.push(Math.ceil(cl));
+          
+          // ARI
+          var ari = obj.automatedReadabilityIndex = automatedReadabilityIndex(text);
+          grade.push(Math.floor(ari));
+          grade.push(Math.ceil(ari));
+          
+          // LWF
+          var lwf = obj.linsearWriteFormula = linsearWriteFormula(text);
+          grade.push(Math.floor(lwf));
+          grade.push(Math.ceil(lwf));
+          
+          // RIX
+          var rixScore = obj.rix = rix(text);
+          if (rixScore >= 7.2) {
+            grade.push(13);
+          } else if (rixScore < 7.2 && rixScore >= 6.2) {
+            grade.push(12);
+          } else if (rixScore < 6.2 && rixScore >= 5.3) {
+            grade.push(11);
+          } else if (rixScore < 5.3 && rixScore >= 4.5) {
+            grade.push(10);
+          } else if (rixScore < 4.5 && rixScore >= 3.7) {
+            grade.push(9);
+          } else if (rixScore < 3.7 && rixScore >= 3.0) {
+            grade.push(8);
+          } else if (rixScore < 3.0 && rixScore >= 2.4) {
+            grade.push(7);
+          } else if (rixScore < 2.4 && rixScore >= 1.8) {
+            grade.push(6);
+          } else if (rixScore < 1.8 && rixScore >= 1.3) {
+            grade.push(5);
+          } else if (rixScore < 1.3 && rixScore >= 0.8) {
+            grade.push(4);
+          } else if (rixScore < 0.8 && rixScore >= 0.5) {
+            grade.push(3);
+          } else if (rixScore < 0.5 && rixScore >= 0.2) {
+            grade.push(2);
+          } else {
+            grade.push(1);
+          }
+          
+          // Find median grade
+          grade = grade.sort(function(a, b) { return a - b; });
+          var midPoint = Math.floor(grade.length / 2);
+          var medianGrade = legacyRound(
+            grade.length % 2 ? 
+            grade[midPoint] : 
+            (grade[midPoint-1] + grade[midPoint]) / 2.0
+          );
+          obj.medianGrade = medianGrade;
+          
+        })();
+
+        obj.readingTime = readingTime(text);
+          
+        return obj;
+        };
+
+        
+
+        /// END
+
+        
+        
+        
+        
+
+
+          
+
+
+        // PASSIVE VOICE
+        // passive('{{ .Content }}').length
+
+        var irregulars = [
+        'awoken',
+        'been',
+        'born',
+        'beat',
+        'become',
+        'begun',
+        'bent',
+        'beset',
+        'bet',
+        'bid',
+        'bidden',
+        'bound',
+        'bitten',
+        'bled',
+        'blown',
+        'broken',
+        'bred',
+        'brought',
+        'broadcast',
+        'built',
+        'burnt',
+        'burst',
+        'bought',
+        'cast',
+        'caught',
+        'chosen',
+        'clung',
+        'come',
+        'cost',
+        'crept',
+        'cut',
+        'dealt',
+        'dug',
+        'dived',
+        'done',
+        'drawn',
+        'dreamt',
+        'driven',
+        'drunk',
+        'eaten',
+        'fallen',
+        'fed',
+        'felt',
+        'fought',
+        'found',
+        'fit',
+        'fled',
+        'flung',
+        'flown',
+        'forbidden',
+        'forgotten',
+        'foregone',
+        'forgiven',
+        'forsaken',
+        'frozen',
+        'gotten',
+        'given',
+        'gone',
+        'ground',
+        'grown',
+        'hung',
+        'heard',
+        'hidden',
+        'hit',
+        'held',
+        'hurt',
+        'kept',
+        'knelt',
+        'knit',
+        'known',
+        'laid',
+        'led',
+        'leapt',
+        'learnt',
+        'left',
+        'lent',
+        'let',
+        'lain',
+        'lighted',
+        'lost',
+        'made',
+        'meant',
+        'met',
+        'misspelt',
+        'mistaken',
+        'mown',
+        'overcome',
+        'overdone',
+        'overtaken',
+        'overthrown',
+        'paid',
+        'pled',
+        'proven',
+        'put',
+        'quit',
+        'read',
+        'rid',
+        'ridden',
+        'rung',
+        'risen',
+        'run',
+        'sawn',
+        'said',
+        'seen',
+        'sought',
+        'sold',
+        'sent',
+        'set',
+        'sewn',
+        'shaken',
+        'shaven',
+        'shorn',
+        'shed',
+        'shone',
+        'shod',
+        'shot',
+        'shown',
+        'shrunk',
+        'shut',
+        'sung',
+        'sunk',
+        'sat',
+        'slept',
+        'slain',
+        'slid',
+        'slung',
+        'slit',
+        'smitten',
+        'sown',
+        'spoken',
+        'sped',
+        'spent',
+        'spilt',
+        'spun',
+        'spit',
+        'split',
+        'spread',
+        'sprung',
+        'stood',
+        'stolen',
+        'stuck',
+        'stung',
+        'stunk',
+        'stridden',
+        'struck',
+        'strung',
+        'striven',
+        'sworn',
+        'swept',
+        'swollen',
+        'swum',
+        'swung',
+        'taken',
+        'taught',
+        'torn',
+        'told',
+        'thought',
+        'thrived',
+        'thrown',
+        'thrust',
+        'trodden',
+        'understood',
+        'upheld',
+        'upset',
+        'woken',
+        'worn',
+        'woven',
+        'wed',
+        'wept',
+        'wound',
+        'won',
+        'withheld',
+        'withstood',
+        'wrung',
+        'written'
+        ];
+
+        var exceptions = [
+        'indeed',
+        ];
+
+        var re = new RegExp('\\b(am|are|were|being|is|been|was|be)\\b\\s*([\\w]+ed|' + irregulars.join('|') + ')\\b', 'gi');
+        var byRe; // lazly construct
+
+        function passive(text, options) {
+        var r = (options && options.by) ?
+                (byRe || constructByRe()) : re; // not sorry
+
+        var suggestions = [];
+        while (match = r.exec(text)) {
+            if (exceptions.indexOf(match[2].toLowerCase()) === -1) {
+            suggestions.push({
+                index: match.index,
+                offset: match[0].length
+            });
+            }
+        }
+        return suggestions;
+        }
+
+        // lol
+        function constructByRe () {
+            return byRe = new RegExp(re.toString().slice(1, -3) + '\\s*by\\b', 'gi');
+        }
+
+
+        /// HELPERS
+        function percentage(num, per) {
+            return (num/100)*per;
+        }
+
+
+        // if PASSIVE VOICE
+        var c = "{{ .Content | plainify}}";
+        victorhugo__total_sentences = c.trim().split(/[\.\?\!]\s/).length;
+
+
+        var victorhugo__passive = passive(c).length;  
+        
+        var passive__1 = victorhugo__total_sentences;
+        var passive__2 = victorhugo__passive;
+
+        var victorhugo__passive_result = percentage(passive__1,passive__2);
+        
+
+        if (victorhugo__passive_result >= 10) {
+            $("#victorhugo__passive").html( victorhugo__passive_result.toFixed(1) + "% sentences contain passive voice, which is more than the recommended maximum of 10%. Try to use their active counterparts.").addClass('fix');        
+            
+        } else if  (victorhugo__passive_result >= 7 && victorhugo__passive_result <= 9 )  {
+            $("#victorhugo__passive").html( victorhugo__passive_result.toFixed(1) + "% sentences contain passive voice, which is less than the recommended maximum of 10%, but you are getting too close. There is space for improvement.").addClass('improve');        
+        } else {
+            $("#victorhugo__passive").html( victorhugo__passive_result.toFixed(1) + "% sentences contain passive voice, which is less than the recommended maximum of 10%. Well done.").addClass('good').appendTo($("#victorhugo__passive").parent());        
+        }
+
+            ///
+        
+
+        /// STOPWORDS 
+        var stopwords = ["a", "about", "above", "after", "again", "against", "ain", "all", "am", "an", "and", "any", "are", "aren", "aren't", "as", "at", "be", "because", "been", "before", "being", "below", "between", "both", "but", "by", "can", "couldn", "couldn't", "d", "did", "didn", "didn't", "do", "does", "doesn", "doesn't", "doing", "don", "don't", "down", "during", "each", "few", "for", "from", "further", "had", "hadn", "hadn't", "has", "hasn", "hasn't", "have", "haven", "haven't", "having", "he", "her", "here", "hers", "herself", "him", "himself", "his", "how", "i", "if", "in", "into", "is", "isn", "isn't", "it", "it's", "its", "itself", "just", "ll", "m", "ma", "me", "mightn", "mightn't", "more", "most", "mustn", "mustn't", "my", "myself", "needn", "needn't", "no", "nor", "not", "now", "o", "of", "off", "on", "once", "only", "or", "other", "our", "ours", "ourselves", "out", "over", "own", "re", "s", "same", "shan", "shan't", "she", "she's", "should", "should've", "shouldn", "shouldn't", "so", "some", "such", "t", "than", "that", "that'll", "the", "their", "theirs", "them", "themselves", "then", "there", "these", "they", "this", "those", "through", "to", "too", "under", "until", "up", "ve", "very", "was", "wasn", "wasn't", "we", "were", "weren", "weren't", "what", "when", "where", "which", "while", "who", "whom", "why", "will", "with", "won", "won't", "wouldn", "wouldn't", "y", "you", "you'd", "you'll", "you're", "you've", "your", "yours", "yourself", "yourselves", "could", "he'd", "he'll", "he's", "here's", "how's", "i'd", "i'll", "i'm", "i've", "let's", "ought", "she'd", "she'll", "that's", "there's", "they'd", "they'll", "they're", "they've", "we'd", "we'll", "we're", "we've", "what's", "when's", "where's", "who's", "why's", "would"]
+
+        // SLUG
+        var slug = "{{ .File.BaseFileName | humanize | lower }}";
+        
+        
+        // CHECK STOPWORDS IN SLUG
+        var stopwordFind = new RegExp('\\b('+stopwords.join('|')+')\\b');
+        var stopwordFound = stopwordFind.test(slug);
+
+        if (stopwordFound) {
+            $("#stopword").html("The slug for this page contains <a href='http://en.wikipedia.org/wiki/Stop_words'>stop words</a>, consider removing them. ").addClass('improve');        
+        } else {
+            $("#stopword").html("The slug for this page looks good.").addClass('good').appendTo($("#stopword").parent());
+        }
+
+        var focusKeyword = "{{ .Params.focus_keyword | lower }}";
+
+        if (focusKeyword != "") {
+            $("#focusKeyword").html("Keyword was set for this page. You are good to go.").addClass('good').appendTo($("#focusKeyword").parent());
+        } else {
+            $("#focusKeyword").html("No focus keyword was set for this page. If you do not set a focus keyword, no score can be calculated.").addClass('improve');
+        }
+      
+        if (focusKeyword != ""){
+            $("#stopword").show();
+            // CHECK KEYWORD IN SLUG
+            // It can also be a keyphrase, but not tested
+            
+            var res = focusKeyword.match(/\b\w+?\b/g)
+            // getting words from second string
+            .reduce(function(a, b) {
+                return a || new RegExp('\\b' + b + '\\b', 'i').test(slug);
+                //checking string in first string
+            }, false);
+            // also set initial value as false since no strings are matched now
+        
+            if (res) {
+                $("#slug").html("The focus keyword appears in the URL of this page.").addClass('good').appendTo($("#slug").parent());
+            } else {
+                $("#slug").html("The focus keyword does not appear in slug. Consider renaming this page.").addClass('improve');
+            }
+        } else {
+            $("#stopword").hide();
+        }
+
+
+        // META DESCRIPTION
+        var victorhugo__meta_description = $("meta[name='description'").attr("content");
+
+        if(victorhugo__meta_description === "") {
+            $("#meta__description").text( "No meta description has been specified. Search engines will display copy from the page instead." ).addClass('fix');
+        } else if(victorhugo__meta_description.length < 5) {
+            $("#meta__description").text( "The meta description is under 120 characters long. However, up to 320 characters are available." ).addClass('improve');
+        } else if(victorhugo__meta_description.length >= 125 && victorhugo__meta_description.length <= 320 ) {
+            $("#meta__description").text( "The meta description has a nice length." ).addClass("good").appendTo($("#meta__description").parent());
+        } else if(victorhugo__meta_description.length >= 320) {
+            $("#meta__description").text( "The meta description is over 320 characters. Reducing the length will ensure the entire description will be visible.").addClass('fix');
+        }
+
+
+        // CONTENT
+        var victorhugo__content = "{{ .Content | lower }}";
+        var victorhugo__rawcontent = victorhugo__content;
+        victorhugo__content = victorhugo__content.split(' ');
+
+
+        if(victorhugo__content === "") {
+            $("#victorhugo__content").text( "This page has no content. Please add some." ).addClass('fix');
+
+        } else if(victorhugo__content.length >= 1 && victorhugo__content.length <= 200 ) {
+            $("#victorhugo__content").text( "The text contains " + victorhugo__content.length + " words. This is far below the recommended minimum of 300 words. Add more content that is relevant for the topic. ").addClass('fix');
+            
+        }  else if(victorhugo__content.length >= 200 && victorhugo__content.length <= 290 ) {
+            $("#victorhugo__content").text( "The text contains under " + victorhugo__content.length + " words long. This is slightly below the recommended minimum of 300 words. Add a bit more copy ").addClass('improve');
+
+        } else if(victorhugo__content.length >= 301) {
+            $("#victorhugo__content").text( "The text is over 300 words. This is more than or equal to the recommended minimum of 300 words.").addClass('good').appendTo($("#victorhugo__content").parent());
+        }
+
+        // FIRST PARAGRAPH
+        // The focus keyword doesn't appear in the first paragraph of the copy. Make sure the topic is clear immediately
+
+        victorhugo__firstParagraph = $(victorhugo__rawcontent).first('p').first().text();
+        var victorhugo__firstParagraph_check = focusKeyword.match(/\b\w+?\b/g)
+
+        .reduce(function(a, b) {
+            return a || new RegExp('\\b' + b + '\\b', 'i').test(victorhugo__firstParagraph);
+        }, false);
+
+        if (victorhugo__firstParagraph_check) {
+            $("#victorhugo__firstParagraph").html("The focus keyword appears in the first paragraph of the copy. Well done. This adds visibility. ").addClass('good').appendTo($("#victorhugo__firstParagraph").parent());
+        } else {
+            $("#victorhugo__firstParagraph").html("The focus keyword doesn't appear in the first paragraph of the copy. Make sure the topic is clear immediately. ").addClass('fix');
+        };
+
+
+        // SUBHEADINGS
+        // Checks if there is a subheading in the tex
+        // returns true if there is
+        // checks if the subheading contains focus keywords
+
+
+        var victorhugo__subheadings = victorhugo__rawcontent.indexOf('<h2>') >= 0; // true
+          
+        if( victorhugo__subheadings ) {
+
+          
+          var a= $(victorhugo__rawcontent).filter('h2').text().split(' ');
+          var b= focusKeyword.split(' ');
+
+              var unique = $.grep(a, function(element) {
+                  return $.inArray(element, b) == -1;
+              });
+          var index = $.grep(a, function(element) {   
+          if($.inArray(element,b)>=0)
+          {
+              return a
+          }
+            });
+          // console.log(index.length);
+
+          
+          if (index.length > 0 && index.length <= 1 ) {
+            $("#victorhugo__subheadings").html("The focus keyword appears only in 1 subheadings in your copy. Try to use it in at least one more subheading.").addClass('improve');
+          } else if (index.length >= 2 ) {
+            $("#victorhugo__subheadings").html("The focus keyword appears in more than one subheadings in your copy, which is optimal.").addClass('good').appendTo($("#victorhugo__subheadings").parent());
+          } else {
+            $("#victorhugo__subheadings").html("You have not used the focus keyword in any subheading (such as an H2) in your copy.").addClass('improve');
+          }
+
+        } else {
+          $("#victorhugo__subheadings").html("The text does not contain any subheadings. Add at least one subheading. ").addClass('fix');  
+        }
+        
+
+        // TITLE
+        // The focus keyword 'Welcome' does not appear in the SEO title.
+        victorhugo__title = "{{ .Page.Title }}";
+
+        if (victorhugo__title) {
+            
+            var victorhugo__title_check = focusKeyword.match(/\b\w+?\b/g)
+
+            .reduce(function(a, b) {
+                return a || new RegExp('\\b' + b + '\\b', 'i').test(victorhugo__title);
+            }, false);
+
+            if (victorhugo__title_check) {
+                $("#victorhugo__title").html("The focus keyword appears in the title. ").addClass('good').appendTo($("#victorhugo__title").parent());
+            } else {
+                $("#victorhugo__title").html("The focus keyword '" + focusKeyword + "' does not appear in the SEO title.").addClass('fix');
+            }
+        } else {
+            $("#victorhugo__title").html("Please add a title to the page.").addClass('fix');
+        }
+
+        // CONTENT KEYWORD DENSITY
+        // The focus keyword doesn't appear in the first paragraph of the copy. Make sure the topic is clear immediately
+
+        var victorhugo__density = $(victorhugo__rawcontent).not('img').text();
+        var victorhugo__density_check = focusKeyword.match(/\b\w+?\b/g).reduce(function(a, b) {
+            return a || new RegExp('\\b' + b + '\\b', 'i').test(victorhugo__density);
+        }, false);
+
+        if (victorhugo__density_check) {
+            // get the density
+            var victorhugo__focusKeyword = focusKeyword.split(' ');
+            var victorhugo__density_amount = 0;
+            var victorhugo__densityWords = victorhugo__rawcontent.replace(/[\.,-\/#!$%\^&\*;:{}=\-_`~()]/g," ").toLowerCase().split(' ');
+            $.each(victorhugo__densityWords, function(index, victorhugo__densityWords) {
+                if ($.inArray(victorhugo__densityWords, victorhugo__focusKeyword) != -1) { 
+                    ++victorhugo__density_amount;
+                }
+            });
+
+            
+          
+            var density__1 = victorhugo__density_amount;
+            var density__2 = victorhugo__densityWords.length;
+
+            // console.log(density__1 + " x " + density__2);
+
+            var victorhugo__density_result = density__1 * 100 / density__2;
+            if (!isFinite(victorhugo__density_result)) victorhugo__density_result = 0;
+                // console.log(victorhugo__density_result.toFixed(1) + "%");
+                victorhugo__density_result = victorhugo__density_result;
+
+                
+                
+            var victorhugo__density_calc; 
+
+            if (victorhugo__density_result >= 0.1 && victorhugo__density_result <= 0.2) {
+                victorhugo__density_calc = "good, but you can do better";
+                $("#victorhugo__density").addClass('improve');
+            } else if (victorhugo__density_result > 0.2) {
+                victorhugo__density_calc = "great";
+                $("#victorhugo__density").addClass('good').appendTo($("#victorhugo__density").parent());
+            } else {
+              victorhugo__density_calc = "bad";
+              $("#victorhugo__density").addClass('fix');
+            }
+            
+            $("#victorhugo__density").html("The keyword density is " + victorhugo__density_result.toFixed(1) + "%, which is " + victorhugo__density_calc + "; the focus keyword was found " + victorhugo__density_amount + " times (including subheadings).");
+
+        } else {
+            $("#victorhugo__density").html("The keyword density is 0%, which is too low; the focus keyword was found 0 times (including subheadings).").addClass('fix');
+        }
+
+    
+        
+    
+
+        // Check for LINKS   
+        var hugoLinks = $(victorhugo__rawcontent).find('a[href], area[href], base[href], link[href]').length;
+
+        if (hugoLinks == "0") {
+            $("#victorhugo__content_links").text( "No links appear in this page, consider adding some (outbound and internal)." ).addClass('fix');
+        } else if (hugoLinks <= "2") {
+            $("#victorhugo__content_links").text( "This page has just " + hugoLinks + " link(s). You can do better!" ).addClass('improve');
+        } else {
+            $("#victorhugo__content_links").text( "This page has " + hugoLinks + " link(s). That's more than enough!" ).addClass('good').appendTo($("#victorhugo__content_links").parent());
+        }
+        
+        // Check for IMGS
+        var hugoIMGS = $(victorhugo__rawcontent).find('img').length;
+
+        if (hugoIMGS == "0") {
+            $("#victorhugo__content_imgs").text( "No images appear in this page, consider adding some as appropriate." ).addClass('fix');
+        } else if (hugoIMGS == "1") {
+            $("#victorhugo__content_imgs").text( "This page has just one image. You can do better!" ).addClass('improve')
+        } else if (hugoIMGS <= 2) {
+            $("#victorhugo__content_imgs").text( "This page has the right amount of images. You can add more if you like." ).addClass("good").appendTo($("#victorhugo__content_imgs").parent());
+
+            
+            var re = 0;
+
+            $($(victorhugo__rawcontent).find('img')).each(function(){
+                
+                // $(this).is(':contains("Replace Me")')
+                if($(this).attr('alt')) {
+                    var attr = $(this).attr('alt');
+
+                    var attr_res = focusKeyword.match(/\b\w+?\b/g)
+                    .reduce(function(a, b) {
+                        return a || new RegExp('\\b' + b + '\\b', 'i').test(attr);
+                    }, false);           
+
+                    
+                    if (attr_res){                   
+                        re = re +1;
+                    }
+
+                } 
+            });
+            
+            if (re == hugoIMGS) {
+                $("#victorhugo__content_imgs").text( "The images on this page contain alt attributes with the focus keyword." ).addClass("good").appendTo($("#victorhugo__content_imgs").parent());
+            } else if (re == 0) {
+                $("#victorhugo__content_imgs").text( "The images in this page are missing the alt attributes." ).addClass("improve").prependTo($("#victorhugo__content_imgs").parent());
+            } else {
+                $("#victorhugo__content_imgs").text( "Some of the images on this page do not have alt attributes containing the focus keyword." ).addClass("improve").prependTo($("#victorhugo__content_imgs").parent());
+            }
+
+        }
+
+        
+        // GOOGLE SNIPPET
+        ///////////////////////////////////////
+        $("#victorhugo #snippet_msg").hide();
+
+        if (victorhugo__title && victorhugo__meta_description) {
+          $("#victorhugo .snippet__desc").html(victorhugo__meta_description);
+        } else {
+          // We show the error msg
+          $("#victorhugo #snippet_msg").show();
+          $("#victorhugo .snippet_wrap").hide(); 
+        }
+         
+        var victorhugo__snippet__title = "{{ .Params.Title }}";
+        victorhugo__snippet__title = victorhugo__snippet__title.substring(0,57);
+        $(".snippet__title").html(victorhugo__snippet__title);
+        
+
+
+        /// READABILITY SCORE
+        var victorhugo__readability = readabilityFunction("{{ .Content }}").fleschReadingEase;
+
+        if ( victorhugo__readability >= 60 ) {
+            $("#victorhugo__readability").html( "The copy scores '" + victorhugo__readability.toFixed(1) +"' in the '<a href='https://en.wikipedia.org/wiki/Flesch%E2%80%93Kincaid_readability_tests' target='_blank'>Flesch Reading Ease test</a>', which is considered ok to read. Well done! " ).addClass("good").appendTo($("#victorhugo__readability").parent());
+        } else if ( victorhugo__readability >= 45 && victorhugo__readability < 60 ) {
+            $("#victorhugo__readability").html( "The copy scores '" + victorhugo__readability.toFixed(1) +"' in the <a href='https://en.wikipedia.org/wiki/Flesch%E2%80%93Kincaid_readability_tests' target='_blank'>Flesch Reading Ease test</a>, which is considered fairly difficult to read. Try to make shorter sentences to improve readability." ).addClass("improve");
+        } else if ( victorhugo__readability < 45 ) {
+            $("#victorhugo__readability").html( "The copy scores '" + victorhugo__readability.toFixed(1) +"' in the <a href='https://en.wikipedia.org/wiki/Flesch%E2%80%93Kincaid_readability_tests' target='_blank'>Flesch Reading Ease test</a>, which is considered extremely difficult to read. Try to make shorter sentences to improve readability. This needs improvement." ).addClass("fix");
+        }
+        
+        // TIME READING SCORE
+        var victorhugo__readingTime = readabilityFunction("{{ .Content }}").readingTime;
+
+        // SVG CIRCLES
+        (function() {
+            document.querySelectorAll('#victorhugo__audit .circular-progress').forEach((progress) => {    
+
+              // First we set the score
+              var victorhugo__seoScoreCircle = $('#victorhugo__seoScore_circle');
+              var victorhugo__readingCircle = $('#victorhugo__readingTime_circle ');
+
+              victorhugo__readingPercent = Math.round( ( victorhugo__readingTime * 100 / 270 )   );
+
+              
+              victorhugo__readingCircle.attr("data-percentage", victorhugo__readingPercent);  
+              
+
+        
+        /// SEO SCORE
+        /// Has to be calcualted at the end since we went through every other factor
+        var victorhugo__seoScore = $('#victorhugo__list .good').length;
+
+        victorhugo__seoScorePercent = Math.round( ( victorhugo__seoScore * 100 / 13 )   );
+
+        if (victorhugo__seoScore >= 0) {
+          victorhugo__seoScoreCircle.attr("data-percentage", victorhugo__seoScorePercent);  
+        }
+              
+              
+
+
+              // Now we start the animation
+
+              const percentage = progress.dataset.percentage;
+              const circle = progress.querySelector('.circle');
+              
+              if (percentage >= 100) {
+                progress.querySelector('#victorhugo__audit .percentage').innerHTML = `100`;
+                circle.setAttribute('stroke-dasharray', `100, 100`);                
+              } else {
+                progress.querySelector('#victorhugo__audit .percentage').innerHTML = `${percentage}`;
+                circle.setAttribute('stroke-dasharray', `${percentage}, 100`);
+              }
+
+              circle.classList.add('-play');
+
+              if (percentage >= 70) {
+                circle.setAttribute("style", "stroke: #8fd739;");
+              } else if (percentage < 70 && percentage >= 45) {
+                circle.setAttribute("style", "stroke: #ffd636;");
+              } else if (percentage < 45) {
+                circle.setAttribute("style", "stroke: #f45a5a;");
+              }
+
+              
+            });  
+        })();
+
+
+        
+
+        // OPEN CLOSE DRAWER
+        $("#victorhugo__close").on('click', function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+            $('#victorhugo').removeClass("victorhugo__open");
+            $('#victorhugo').addClass("victorhugo__close");
+            $('#victorhugo__open').show();
+        });
+
+        $("#victorhugo__open").on('click', function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+            $('#victorhugo').removeClass("victorhugo__close");
+            $('#victorhugo').addClass("victorhugo__open");
+        });
+    
+        
+
+        var victorhugo__snippet_tw_img = $("meta[name='twitter:image']").attr("content");
+        var victorhugo__snippet_tw_link = '<svg style="position:relative; width:18px; margin-left: 9px; margin-right: -4px;" viewBox="0 0 24 24" class="r-4qtqp9 r-yyyyoo r-1xvli5t r-dnmrzs r-bnwqim r-1plcrui r-lrvibr"><g><path d="M11.96 14.945c-.067 0-.136-.01-.203-.027-1.13-.318-2.097-.986-2.795-1.932-.832-1.125-1.176-2.508-.968-3.893s.942-2.605 2.068-3.438l3.53-2.608c2.322-1.716 5.61-1.224 7.33 1.1.83 1.127 1.175 2.51.967 3.895s-.943 2.605-2.07 3.438l-1.48 1.094c-.333.246-.804.175-1.05-.158-.246-.334-.176-.804.158-1.05l1.48-1.095c.803-.592 1.327-1.463 1.476-2.45.148-.988-.098-1.975-.69-2.778-1.225-1.656-3.572-2.01-5.23-.784l-3.53 2.608c-.802.593-1.326 1.464-1.475 2.45-.15.99.097 1.975.69 2.778.498.675 1.187 1.15 1.992 1.377.4.114.633.528.52.928-.092.33-.394.547-.722.547z"></path><path d="M7.27 22.054c-1.61 0-3.197-.735-4.225-2.125-.832-1.127-1.176-2.51-.968-3.894s.943-2.605 2.07-3.438l1.478-1.094c.334-.245.805-.175 1.05.158s.177.804-.157 1.05l-1.48 1.095c-.803.593-1.326 1.464-1.475 2.45-.148.99.097 1.975.69 2.778 1.225 1.657 3.57 2.01 5.23.785l3.528-2.608c1.658-1.225 2.01-3.57.785-5.23-.498-.674-1.187-1.15-1.992-1.376-.4-.113-.633-.527-.52-.927.112-.4.528-.63.926-.522 1.13.318 2.096.986 2.794 1.932 1.717 2.324 1.224 5.612-1.1 7.33l-3.53 2.608c-.933.693-2.023 1.026-3.105 1.026z"></path></g></svg>'
+
+        $(".snippet__tw_img").html("<img src='" + victorhugo__snippet_tw_img + "' style='width: 100%; border:1px solid #777777; border-top-left-radius: 12px;border-top-right-radius: 12px;'><div id='victorhugo__tw_preview'><span><b>" + victorhugo__title + "</b></span><span>" + victorhugo__meta_description +"</span><span style='color:#888888'>" + victorhugo__snippet_tw_link + "yourwebsite.com</span></div>");
+  
+
+    });
+    </script>
+
+
+    <style>
+
+        #victorhugo {
+            overflow-y: auto;
+            box-shadow: 0 0 25px #ccc;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            width: 520px;
+            z-index: 10000;
+            background: #fff;
+            padding: 18px 25px;
+            font-family: Arial, Helvetica, sans-serif !important;
+            color: #444;
+            user-select: none;
+            transform: translateX(-900px);
+        }
+
+        #victorhugo .bi-question-circle {
+          cursor:help;
+        }
+
+        #victorhugo span#victorhugo__keyword {
+          background: #eee;
+          padding: 6px 8px;
+          border-radius: .3rem;
+        }
+        #victorhugo span#victorhugo__keyword .bi-question-circle {
+          position: relative;
+          top: -2px; /* Because the icon looks funny at me */
+        }
+
+        #victorhugo .victorhugo_panel {
+          margin: 0 0 1.6em 0;
+        }
+
+        #victorhugo .victorhugo_panel #victorhugo_logo {
+          width: 142px;
+          display: block;
+          margin: 0 auto;
+        }
+
+        #victorhugo hr {
+          border: none; 
+          background-color: none; 
+          background-image: none; 
+          border-top: 1px solid #eee; 
+          margin: 15px 0;
+        }
+
+        #victorhugo::after {
+          content: "v.1.0";
+          color: #ccc;
+          padding: 5px;
+          position: absolute;
+          width: 40px;
+          top: 0;
+          left: 0;
+          font-size: x-small;
+        }
+
+
+        #victorhugo svg {
+          display: inline-block;
+          vertical-align: middle;
+        }
+        
+        #victorhugo a {
+            color: blue;
+            text-decoration: underline;
+        }
+
+        #victorhugo a:hover {
+            text-decoration: none;
+        }
+
+        #victorhugo ul {
+            list-style: none; /* Remove default bullets */
+            margin: 0;
+            padding: 0 25px;
+        }
+
+        #victorhugo li {
+            text-indent: -0.7rem;
+            line-height: 1.4rem;
+            margin-bottom: 14px;
+        }
+
+        #victorhugo ul li::before {
+            content: "•";  /* Add content: \2022 is the CSS Code/unicode for a bullet */
+            font-weight: bold; /* If you want it to be bold */
+            display: inline-block; /* Needed to add space between the bullet and the text */
+            font-size: 2.2rem;
+            vertical-align: bottom;
+            
+            padding-right: 0.5rem;
+            color:#fff;
+        }
+
+        #victorhugo ul li.fix::before {
+            color: #dc3232; 
+        }
+
+        #victorhugo ul li.good::before {
+            color: #7ad03a; 
+        }
+
+        #victorhugo ul li.improve::before {
+            color: #ff7300;
+        }
+
+        /* GOOGLE SNIPPET */
+        #victorhugo #snippet_msg {
+          background: #eee;
+          padding: 15px;
+          text-align: center;
+        }
+
+        #victorhugo #snippet_msg svg {
+          width: 2.5em;
+          height: 2.5em;
+          display: block;
+          margin: 0 auto 5px auto;
+        }
+
+        #victorhugo .snippet_wrap {
+          border: 1px solid #e9e9e9;
+          box-shadow: 0 4px 3px #eee;
+          padding: 1em 1em;
+          border-radius: 0.5em;
+          cursor: pointer;
+          margin: 0 0 2em 0;
+          display: flex;
+          position: relative;
+          column-gap: .7em;
+        }
+
+        #victorhugo .snippet_wrap.column {
+          flex-direction: column;
+        }
+   
+        #victorhugo .snippet_wrap svg { 
+          width: 1.4em;
+          position: absolute;
+          right: 10px;
+        }
+        
+        #victorhugo .snippet_wrap .snippet__title {
+          font-size: 1.3rem;
+          display: block;
+          color: #1a0dab;
+        }
+
+        #victorhugo .snippet_wrap .snippet__title:hover {
+          text-decoration: underline;
+        }
+
+        #victorhugo .snippet_wrap .snippet__link {
+          display: block;
+          color: #5f6368;
+        }
+
+        /* TWITTER SNIPPET */
+        #victorhugo .snippet_wrap #victorhugo__twitter_post {
+          line-height: 1.2rem;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+
+        #victorhugo #victorhugo_twitter_snippet .snippet_wrap:hover {
+          background-color:rgb(245, 248, 250);
+        }
+
+        #victorhugo .snippet_wrap #victorhugo__twitter_post span:first-of-type {
+          color: #777;
+        }
+
+        #victorhugo .snippet_wrap #victorhugo__twitter_post .snippet__desc {
+          display: block;
+          margin: 7px 10px 20px 0;
+        }
+        #victorhugo .snippet_wrap #victorhugo__twitter_post .snippet__bottom {
+          display: flex;
+          flex-direction: row;
+          column-count: 4;
+          column-gap: 5em;
+          margin-left:1em;
+        }
+
+        #victorhugo .snippet_wrap #victorhugo__twitter_post .snippet__bottom svg {
+          position: relative;
+          max-width: 1.2rem;
+          fill: #777;
+        }
+
+        #victorhugo__tw_preview {
+          background: #fff;
+          padding: 12px;
+          font-size: 0.95rem;
+          border-bottom-left-radius: 16px;
+          border-bottom-right-radius: 16px;
+          border: 1px solid #dbdbdb;
+          margin-bottom: 1.2em;
+        }
+
+        #victorhugo__tw_preview span {
+          padding-top: .3em;
+          color: #333;
+          display: block;
+        }
+
+
+        /* VICTOR HUGO AUDITS */
+        #victorhugo__audit {
+          text-align: center;
+          margin: 0 0 3em 0;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          flex-flow: row nowrap;         
+        }
+
+        #victorhugo__audit .bi-question-circle {
+          position: absolute;
+          right: 0;
+          fill: #999;
+        }
+
+        #victorhugo__audit .bi-question-circle:hover {
+          fill: green;
+        }
+
+        #victorhugo__audit .circular-progress {
+          display: block;
+          max-width: 95px;
+        }
+        #victorhugo__audit .circular-progress .circle-bg,
+        #victorhugo__audit .circular-progress .circle {
+          fill: none;
+          stroke-width: .1em;
+        }
+        #victorhugo__audit .circular-progress .circle-bg {
+          stroke: #eee;
+        }
+        #victorhugo__audit .circular-progress .circle {
+          animation: progress 1s ease-out forwards;
+          animation-play-state: paused;
+          stroke: #000;
+          stroke-linecap: round;
+        }
+        #victorhugo__audit .circular-progress .circle.-play {
+          animation-play-state: running;
+        }
+        @keyframes progress {
+          0% {
+            stroke-dasharray: 0 100;
+          }
+        }
+        #victorhugo__audit .circular-progress .percentage {
+          fill: #000;
+          font-family: sans-serif;
+          font-size: 0.5em;
+          text-anchor: middle;
+        }
+
+        /* SEO Score */
+        #victorhugo__seoScore,
+        #victorhugo__readingTime {
+          margin: 10px 20px;
+          position: relative;
+        }
+        #victorhugo__seoScore::after {
+          content: "SEO Score";
+          font-size: 0.90rem;
+          white-space: nowrap;
+          padding: 0.7em 0 0 0;
+          position: absolute;
+          width: 100%;
+          left: 0;
+          text-align: center;
+        }
+        /* Reading Time */
+        #victorhugo__readingTime::after {
+          content: "Dwell Time Score";
+          font-size: 0.90rem;
+          white-space: nowrap;
+          padding: 0.7em 0 0 0;
+          position: absolute;
+          width: 100%;
+          left: 0;
+          text-align: center;
+        }
+        
+        #victorhugo__bottom {
+          text-align: center;
+          margin: 4em 0 1em 0;
+        }
+
+        #victorhugo__close svg {
+          width: 1.2rem;
+          height: 1.2rem;
+          position: absolute;
+          right: 10px;
+          top: 10px;
+          fill: #777;
+        }
+
+        #victorhugo__close svg:hover {
+          fill: green;
+        }
+
+        /* DRAWER */
+        .victorhugo__open {
+          left: 0;
+          animation: Open .4s forwards;
+        }
+
+
+        #victorhugo__open img {
+          max-width: 75px;
+          margin: 7px;
+        }
+
+        .victorhugo__close {
+          animation: Close .4s forwards;
+        }
+
+                
+        @keyframes Open {
+          0% {
+            transform: translateX(-900px);
+          }
+          100% {
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes Close {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-900px);
+          }
+        }
+
+        #victorhugo__open {
+          position: fixed;
+          left: 5px;
+          top: 5px;
+          padding: 5px;
+          z-index: 100;
+          transition: all .2s ease-in-out; 
+        }
+
+        #victorhugo__open:hover {
+          transform: scale(1.1); 
+        }
+
+    </style>
+
+
+    <a href="#" id="victorhugo__open">
+      <img src="https://raw.githubusercontent.com/doncabreraphone/victorhugo/master/misc/victorhugo__logo_small.png">
+    </a>
+
+    <div id="victorhugo">
+        <a href="#" id="victorhugo__close">
+          <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-x" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" d="M11.854 4.146a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708-.708l7-7a.5.5 0 0 1 .708 0z"/>
+            <path fill-rule="evenodd" d="M4.146 4.146a.5.5 0 0 0 0 .708l7 7a.5.5 0 0 0 .708-.708l-7-7a.5.5 0 0 0-.708 0z"/>
+          </svg>
+        </a>
+
+        <div class="victorhugo_panel">
+          <img src="https://raw.githubusercontent.com/doncabreraphone/victorhugo/master/misc/victorhugo__logo_small.png" id="victorhugo_logo">
+        </div>
+
+        <!-- Audit Circles -->
+                 
+        <div id="victorhugo__audit">
+
+          <div id="victorhugo__seoScore">
+            <span title="This is your overal score. The less fixed and improvements you have left, the higher your score.">
+              <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-question-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                <path d="M5.25 6.033h1.32c0-.781.458-1.384 1.36-1.384.685 0 1.313.343 1.313 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.007.463h1.307v-.355c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.326 0-2.786.647-2.754 2.533zm1.562 5.516c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z"/>
+              </svg>
+            </span>
+
+          <svg viewBox="0 0 36 36" id="victorhugo__seoScore_circle" class="circular-progress" data-percentage="0">
+            <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            <path class="circle" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            <text x="18" y="20.35" class="percentage">0</text>
+          </svg>
+          </div>
+          
+          <div id="victorhugo__readingTime">
+            <span title="This is the duration the user will spend reading your content. It is the time between when a user clicks on a search engine result, and when the user returns from that result, or leaves.">
+              <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-question-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                <path d="M5.25 6.033h1.32c0-.781.458-1.384 1.36-1.384.685 0 1.313.343 1.313 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.007.463h1.307v-.355c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.326 0-2.786.647-2.754 2.533zm1.562 5.516c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z"/>
+              </svg>
+            </span>
+
+          <svg viewBox="0 0 36 36" id="victorhugo__readingTime_circle" class="circular-progress" data-percentage="0">
+            <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            <path class="circle" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            <text x="18" y="20.35" class="percentage">0</text>
+          </svg>
+          </div>
+        
+          
+          
+
+
+        </div>
+
+
+        <hr>
+        <!-- Focus Keyword -->
+        <div class="victorhugo_panel">
+            <p style="text-align:center;">Focus Keyword: 
+              <span id="victorhugo__keyword" title="Enter the keyword/keyphrase you would like this page to rank for in Google. Victor Hugo will run checks to make sure you stay on track.">{{ if .Params.focus_keyword }}{{ .Params.focus_keyword }}{{ end }}
+                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-question-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                  <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                  <path d="M5.25 6.033h1.32c0-.781.458-1.384 1.36-1.384.685 0 1.313.343 1.313 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.007.463h1.307v-.355c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.326 0-2.786.647-2.754 2.533zm1.562 5.516c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z"/>
+                </svg>
+              </span>  
+            </p>
+        </div>
+            
+        <!-- Full Audit -->
+        <div class="victorhugo_panel">
+            <ul id="victorhugo__list">
+                <li id="focusKeyword"></li>
+                <li id="stopword"></li>
+                <li id="slug"></li>
+                <li id="victorhugo__content"></li>
+                <li id="meta__description"></li>
+                <li id="victorhugo__content_links"></li>
+                <li id="victorhugo__content_imgs"></li>
+                <li id="victorhugo__firstParagraph"></li>
+                <li id="victorhugo__title"></li>
+                <li id="victorhugo__density"></li>
+                <li id="victorhugo__passive"></li>
+                <li id="victorhugo__readability"></li>
+                <li id="victorhugo__subheadings"></li>
+            </ul>
+        </div>
+
+        <!-- SERP -->
+        <div class="victorhugo_panel">
+
+          <div id="snippet_msg">
+            <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-exclamation-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+              <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
+            </svg>
+            To see the Google and Social Media Snippet, add a description and a title for this post in the front matter.
+          </div>
+
+          <div id="victorhugo_google_snippet">
+            {{ $victorhugo__slug := .RelPermalink }}
+            {{  $victorhugo__slug := substr $victorhugo__slug 0 -1 }}
+            {{  $victorhugo__slug := substr $victorhugo__slug 1 200 }}
+            
+            <p>Your post on Google</p>
+            <div class="snippet_wrap column">
+              <svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid" viewBox="0 0 256 262">
+                <defs/>
+                <path fill="#4285F4" d="M256 133c0-10-1-18-3-26H131v48h71c-1 12-9 30-26 43v1l38 30h3c25-22 39-56 39-96"/>
+                <path fill="#34A853" d="M131 261c35 0 64-12 86-32l-41-31c-11 7-26 13-45 13-35 0-64-23-75-55l-1 1-41 31v1c21 43 65 72 117 72"/>
+                <path fill="#FBBC05" d="M56 156a80 80 0 010-51v-2L15 71l-1 1a131 131 0 000 117l42-33"/>
+                <path fill="#EB4335" d="M131 50c24 0 41 11 50 20l37-36A130 130 0 0014 72l42 33c11-32 40-55 75-55"/>
+              </svg>
+              
+              <span class="snippet__link">{{ replace $victorhugo__slug "/" " › " }}</span>
+              <span class="snippet__title"></span>
+              <span class="snippet__desc"></span>
+            </div>
+            
+          </div>
+
+          <div id="victorhugo_twitter_snippet">
+            <p>Your post when shared on Twitter</p>
+
+            <div class="snippet_wrap">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1110 902">
+                <defs/>
+                <path fill="#5da8dc" stroke="#5da8dc" stroke-width=".5" d="M741 0v0h52l19 4a203 203 0 0165 24 285 285 0 0147 33c6 6 16 8 29 5l42-12 44-18a516 516 0 0032-16h0l1-1h1l1-1h1v-1h1l1-1h1v2l-1 1v3l-1 1v1l-1 2-1 4-9 20a233 233 0 01-70 82l-5 3-1 1-1 1h0-1 0l-1 1-1 1h0-1 0v1h0-1 5l28-5c19-4 37-9 54-15l27-9 3-1h1l1-1h1l1-1h1l2-1h2v2h0l-1 1h0-1 0v1h0-1 0v1h0-1v2h-1a4398 4398 0 01-29 37l-21 22c-13 14-26 25-38 35a47 47 0 00-19 38 878 878 0 01-10 111 721 721 0 01-143 316 597 597 0 01-122 114 428 428 0 01-76 45 474 474 0 01-107 43 521 521 0 01-121 22l-36 4v0h-65v0l-8-1a456 456 0 01-56-6 599 599 0 01-239-85l-9-5v-1h0-1v-1H2v-1h0-1v-1h0-1v-2h1l1 1h5a607 607 0 00113-3 518 518 0 00186-71l23-16h1v-1h1v-1h2v-2h1v-1h-8l-15-1a226 226 0 01-94-35 177 177 0 01-46-39 202 202 0 01-38-60l-8-18-1-1v-2l-1-1v-1h2l1 1 11 1 35 1a267 267 0 0043-4h2l3-1h2v-1h1v-1h-4l-2-1h-2l-2-1a184 184 0 01-34-13c-15-6-26-12-35-18a242 242 0 01-25-20c-8-7-16-17-25-28a240 240 0 01-41-82 232 232 0 01-8-42l-2-21h2l1 1 1 1h1l1 1 16 7 38 12 28 5 4 1h9v-1h-1 0v-1h-1 0l-1-1h-1v-1h-1 0l-1-1h-1v-1a1247 1247 0 01-26-22l-18-21a162 162 0 01-16-24 285 285 0 01-26-70A220 220 0 0166 63l9-19v-1l1-2h0v-1h1v1h1v1h1v1l1 1h0v1l14 15a892 892 0 0077 75 588 588 0 00106 69 595 595 0 00179 63 785 785 0 0082 11h7v-3l-2-12a235 235 0 011-77 246 246 0 0142-96 216 216 0 0169-60 260 260 0 0186-30z"/>
+                <path fill="#fff" stroke="#fff" stroke-width=".5" d="M0 399V0h741v0l-13 3a260 260 0 00-113 56 216 216 0 00-60 89 246 246 0 00-12 115l2 12v3h-7a506 506 0 01-82-11 635 635 0 01-107-31 595 595 0 01-203-124l-20-19-32-33-14-15v-1h0l-1-1v-1h-1v-1h0-1v-1h0-1v1h0l-1 2v1l-9 19a238 238 0 00-19 67 242 242 0 0030 141l16 24a588 588 0 0035 37l9 6h0l1 1 1 1h1l1 1 1 1h1v1h1-13a444 444 0 01-66-17l-16-7-1-1h-1l-1-1h-1l-1-1h-1l2 21a232 232 0 0074 152 242 242 0 0025 20 384 384 0 0069 32h4l2 1h2l2 1h0-1 0v1h-2l-3 1h-2a210 210 0 01-43 4l-35-1-11-1-1-1h-2v1l1 1v2l1 1 8 18a245 245 0 0038 60l20 20a266 266 0 00119 54l16 1h8v1h-1v2h-2v1h-1 0v1h-1 0l-23 16a370 370 0 01-131 59 518 518 0 01-144 17l-24-2H2l-1-1H0V399zm1108-289h0l1-1h0v792H382v0l36-4a825 825 0 00121-22 759 759 0 00147-64 428 428 0 0073-53 666 666 0 0085-85 675 675 0 00153-427c0-15 6-28 19-38a503 503 0 0088-94h1v-1l1-1h0v-1h1v-1h1zM812 4l-19-4h316v107h-2l-2 1h-1l-1 1h-1l-1 1h-1l-3 1-27 9c-17 6-35 11-54 15l-28 6h-5v-1h1v-1h1l1-1h1v-1h1l1-1h1l5-4 9-7 14-13a250 250 0 0057-87l1-1v-1l1-1v-1l1-2v-3h-2v1h-1 0l-1 1-1 1h-1l-1 1h0a384 384 0 01-32 16 564 564 0 01-86 30c-13 3-23 1-29-5s-13-12-21-17l-26-16a245 245 0 00-30-14c-11-4-22-8-35-10zM0 851v-51h1v1h1v1h1l1 1h1v1l9 5 16 9 36 18a594 594 0 00187 58 1669 1669 0 0056 6l8 1v0H0v-50z"/>
+              </svg>  
+
+              <div class="left">
+                <img src="https://raw.githubusercontent.com/doncabreraphone/victorhugo/master/misc/victorhugo__logo_small.png" class="victorhugo__avatar" style="border-radius: 100%;width: 50px">
+              </div>
+              
+
+
+              <div id="victorhugo__twitter_post">
+                <b>Victor Hugo</b> <span>@thefreebundle</span> · {{ .Date.Format "Jan 2" }}
+                <span class="snippet__desc"></span>
+
+                <span class="snippet__tw_img"></span>
+              
+                <div class="snippet__bottom">
+
+                  <svg viewBox="0 0 24 24" class="r-4qtqp9 r-yyyyoo r-1xvli5t r-dnmrzs r-bnwqim r-1plcrui r-lrvibr r-1hdv0qi"><g><path d="M14.046 2.242l-4.148-.01h-.002c-4.374 0-7.8 3.427-7.8 7.802 0 4.098 3.186 7.206 7.465 7.37v3.828c0 .108.044.286.12.403.142.225.384.347.632.347.138 0 .277-.038.402-.118.264-.168 6.473-4.14 8.088-5.506 1.902-1.61 3.04-3.97 3.043-6.312v-.017c-.006-4.367-3.43-7.787-7.8-7.788zm3.787 12.972c-1.134.96-4.862 3.405-6.772 4.643V16.67c0-.414-.335-.75-.75-.75h-.396c-3.66 0-6.318-2.476-6.318-5.886 0-3.534 2.768-6.302 6.3-6.302l4.147.01h.002c3.532 0 6.3 2.766 6.302 6.296-.003 1.91-.942 3.844-2.514 5.176z"></path></g></svg>
+
+                  <svg viewBox="0 0 24 24" class="r-4qtqp9 r-yyyyoo r-1xvli5t r-dnmrzs r-bnwqim r-1plcrui r-lrvibr r-1hdv0qi"><g><path d="M23.77 15.67c-.292-.293-.767-.293-1.06 0l-2.22 2.22V7.65c0-2.068-1.683-3.75-3.75-3.75h-5.85c-.414 0-.75.336-.75.75s.336.75.75.75h5.85c1.24 0 2.25 1.01 2.25 2.25v10.24l-2.22-2.22c-.293-.293-.768-.293-1.06 0s-.294.768 0 1.06l3.5 3.5c.145.147.337.22.53.22s.383-.072.53-.22l3.5-3.5c.294-.292.294-.767 0-1.06zm-10.66 3.28H7.26c-1.24 0-2.25-1.01-2.25-2.25V6.46l2.22 2.22c.148.147.34.22.532.22s.384-.073.53-.22c.293-.293.293-.768 0-1.06l-3.5-3.5c-.293-.294-.768-.294-1.06 0l-3.5 3.5c-.294.292-.294.767 0 1.06s.767.293 1.06 0l2.22-2.22V16.7c0 2.068 1.683 3.75 3.75 3.75h5.85c.414 0 .75-.336.75-.75s-.337-.75-.75-.75z"></path></g></svg>
+
+                  <svg viewBox="0 0 24 24" class="r-4qtqp9 r-yyyyoo r-1xvli5t r-dnmrzs r-bnwqim r-1plcrui r-lrvibr r-1hdv0qi"><g><path d="M12 21.638h-.014C9.403 21.59 1.95 14.856 1.95 8.478c0-3.064 2.525-5.754 5.403-5.754 2.29 0 3.83 1.58 4.646 2.73.814-1.148 2.354-2.73 4.645-2.73 2.88 0 5.404 2.69 5.404 5.755 0 6.376-7.454 13.11-10.037 13.157H12zM7.354 4.225c-2.08 0-3.903 1.988-3.903 4.255 0 5.74 7.034 11.596 8.55 11.658 1.518-.062 8.55-5.917 8.55-11.658 0-2.267-1.823-4.255-3.903-4.255-2.528 0-3.94 2.936-3.952 2.965-.23.562-1.156.562-1.387 0-.014-.03-1.425-2.965-3.954-2.965z"></path></g></svg>
+
+                  <svg viewBox="0 0 24 24" class="r-4qtqp9 r-yyyyoo r-1xvli5t r-dnmrzs r-bnwqim r-1plcrui r-lrvibr r-1hdv0qi"><g><path d="M17.53 7.47l-5-5c-.293-.293-.768-.293-1.06 0l-5 5c-.294.293-.294.768 0 1.06s.767.294 1.06 0l3.72-3.72V15c0 .414.336.75.75.75s.75-.336.75-.75V4.81l3.72 3.72c.146.147.338.22.53.22s.384-.072.53-.22c.293-.293.293-.767 0-1.06z"></path><path d="M19.708 21.944H4.292C3.028 21.944 2 20.916 2 19.652V14c0-.414.336-.75.75-.75s.75.336.75.75v5.652c0 .437.355.792.792.792h15.416c.437 0 .792-.355.792-.792V14c0-.414.336-.75.75-.75s.75.336.75.75v5.652c0 1.264-1.028 2.292-2.292 2.292z"></path></g></svg>
+
+                </div>
+              </div>
+
+            </div>
+
+
+          </div>
+
+          
+          <p id="victorhugo__bottom"><a href="https://github.com/doncabreraphone/victorhugo" target="_blank">About Victor Hugo</a></p>
+
+        </div>
+    
+    
+      </div>
+
+
+        
+
+    </div>
+
+    {{ else }}
+    <div style="
+    overflow-y: auto;
+        box-shadow: 0 0 25px #ccc;
+        position: fixed;
+        height: 100vh;
+        left: 0;
+        width: 520px;
+        z-index: 10000;
+        background: #fff;
+        padding: 18px 25px;
+        font-family: Arial, Helvetica, sans-serif !important;
+        color: #444;
+
+        
+
+    display: table;
+    text-align: center;
+    ">
+
+    <div style="
+        display: table-cell;
+    vertical-align: middle;
+    text-align: left;
+    ">
+
+    <ul style="list-style-type: none; margin: 0; padding: 0 15px;">
+
+    <li style="text-indent: -1rem;  margin: 15px 0;"><span style="font-size: 2rem; vertical-align: middle; line-height: 1.2rem; color: #dc3232">•</span> You forgot to add a ".Params.Focus_Keyword" in the front matter of this page.</li>
+
+    </ul>
+
+    <hr>
+
+    <div style="text-align: center; font-size: small;">
+    <b>Tip:</b> whenever you see this icon <svg width="1em" height="1em" viewBox="0 0 16 16" style="display: inline-block;
+    vertical-align: middle;" class="bi bi-question-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+      <path d="M5.25 6.033h1.32c0-.781.458-1.384 1.36-1.384.685 0 1.313.343 1.313 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.007.463h1.307v-.355c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.326 0-2.786.647-2.754 2.533zm1.562 5.516c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z"/>
+    </svg> you can hover with your mouse for a few seconds and a quick tip will be displayed. 
+    </div>
+
+    </div>
+
+    </div>
+    {{ end }}
+
+    {{ else }}
+{{ end }}
+
+{{ end }}
+

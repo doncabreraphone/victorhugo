@@ -17,15 +17,19 @@
   <a href="https://github.com/doncabreraphone/victorhugo/blob/master/misc/hugo-seo-snippets.md">Seo Snippets</a>
     ·
   <a href="#say-thanks">Say Thanks</a>
-
   
 </p>
 
+ <video style="width:100%; margin: 15px 0;" controls>
+  <source src="https://i.imgur.com/2o0sjKY.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video> 
+
 ## Overview
 
-Victor Hugo is a SEO plugin for <a href="https://gohugo.io/">Hugo</a>, the world’s fastest framework for building websites. 
+Victor Hugo is a SEO plugin for <a href="https://gohugo.io/">Hugo</a>, the world’s fastest framework for building websites. It audits your content as you write it and gives you an estimate based on best SEO practices, so you can improve your SERP (Search Engine Results Pages).
 
-**No browser extensions, no external services, no installs. Just a simple partial. One line of code and you are ready to write SEO friendly content with Victor Hugo.**
+**Victor Hugo uses no browser extensions, no external services, no installs. It lives in a simple partial. One line of code and you are ready to write SEO-friendly content.**
 
 When writing a blog post, Victor Hugo will:
 * Check for stop words in your page slug.
@@ -34,9 +38,10 @@ When writing a blog post, Victor Hugo will:
 * Help you write SEO friendly meta descriptions
 * Run your copy through an included version of the <a href="https://en.wikipedia.org/wiki/Flesch%E2%80%93Kincaid_readability_tests" target="_blank">Flesch Reading Ease Test</a>, and give you an easy-to-read score.
 
-...and more, much more, right in your browser. 
+...and more, much more, right in your browser, without having to subscribe to any extra tool. 
 
-Victor Hugo will help you write optimized SEO content from the get-go, so you don't have to do it later when your blog post is already online.
+With Victor Hugo, you will write optimized SEO content from the get-go, so you don't have to do it later when your blog post is already online.
+
 
 ## Install
 
@@ -102,7 +107,11 @@ Victor Hugo will help you write content that ranks with your Focus Keyword or Fo
 That's it, you can now start using Victor Hugo and ranking like a champ!
 
 ## Say thanks
-This plugin was put together by someone who doesn't code, at all. I am fiction writer, so you will excuse the clumsiness of my code. The Lord knows I've tried to be consistent over the years, but it is what it is. If you want to contribute to this project, by all means, feel free to do so from the Issues tab. 
+This plugin was put together by someone who doesn't code, at all. I am fiction writer, so those purists of you will excuse the clumsiness of my code. I put this project together in less than 48hs and had no time to go clean about it.
+
+It is what it is. 
+
+If you want to contribute to this project, by all means, feel free to do so from the Issues tab. 
 
 If you feel like saying thanks, be a sport, buy one of my books:
 
