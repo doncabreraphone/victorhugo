@@ -31,7 +31,7 @@ Victor Hugo is a SEO plugin for <a href="https://gohugo.io/">Hugo</a>, the world
 
 **Victor Hugo uses no browser extensions, no external services, no installs. It lives in a simple partial. One line of code and you are ready to write SEO-friendly content.**
 
-<p style="text-align:center">
+<p style="text-align:center;border:1px solid #ccc;border-radius:4px;margin:6px 0;">
 <img src="https://github.com/doncabreraphone/victorhugo/blob/master/misc/victorhugo_readme_img.jpg">
 </p>
 
