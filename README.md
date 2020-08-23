@@ -135,19 +135,6 @@ Incidentally, I am also a game developer:
 
 * https://cabrerabrothers.com/
 
-
-## Status
-<!-- https://shields.io/category/analysis -->
-[![GitHub license](https://img.shields.io/github/license/doncabreraphone/victorhugo)](https://github.com/doncabreraphone/victorhugo/blob/master/LICENSE) 
-
-[![Twitter](https://img.shields.io/twitter/url?url=https%3A%2F%2Fgithub.com%2Fdoncabreraphone%2Fvictorhugo)](https://twitter.com/intent/tweet?text=Wow:&url=https%3A%2F%2Fgithub.com%2Fdoncabreraphone%2Fvictorhugo)
-
-![GitHub language count](https://img.shields.io/github/languages/count/doncabreraphone/victorhugo)
-
-![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/doncabreraphone/victorhugo)
-
-![GitHub last commit (branch)](https://img.shields.io/github/last-commit/doncabreraphone/victorhugo/master)
-
 ## License
 
 Code and documentation under GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007. Read the LICENSE file included in this repository for the complete version.
