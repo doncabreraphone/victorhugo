@@ -11,7 +11,7 @@
     {{ end }}
 
     <script>
-    $(document).ready(function(){
+    window.addEventListener('DOMContentLoaded', function(){
         // VICTOR HUGO
         // By Javier Cabrera
         // https://github.com/doncabreraphone/victorhugo
@@ -645,17 +645,20 @@
 
         // META DESCRIPTION
         var victorhugo__meta_description = $("meta[name='description'").attr("content");
+        if (victorhugo__meta_description){
 
-        if(victorhugo__meta_description === "") {
-            $("#meta__description").text( "No meta description has been specified. Search engines will display copy from the page instead." ).addClass('fix');
-        } else if(victorhugo__meta_description.length < 5) {
-            $("#meta__description").text( "The meta description is under 120 characters long. However, up to 320 characters are available." ).addClass('improve');
-        } else if(victorhugo__meta_description.length >= 125 && victorhugo__meta_description.length <= 320 ) {
-            $("#meta__description").text( "The meta description has a nice length." ).addClass("good").appendTo($("#meta__description").parent());
-        } else if(victorhugo__meta_description.length >= 320) {
-            $("#meta__description").text( "The meta description is over 320 characters. Reducing the length will ensure the entire description will be visible.").addClass('fix');
+          if(victorhugo__meta_description === "") {
+              $("#meta__description").text( "No meta description has been specified. Search engines will display copy from the page instead." ).addClass('fix');
+          } else if(victorhugo__meta_description.length < 5) {
+              $("#meta__description").text( "The meta description is under 120 characters long. However, up to 320 characters are available." ).addClass('improve');
+          } else if(victorhugo__meta_description.length >= 125 && victorhugo__meta_description.length <= 320 ) {
+              $("#meta__description").text( "The meta description has a nice length." ).addClass("good").appendTo($("#meta__description").parent());
+          } else if(victorhugo__meta_description.length >= 320) {
+              $("#meta__description").text( "The meta description is over 320 characters. Reducing the length will ensure the entire description will be visible.").addClass('fix');
+          } 
+        } else {
+          $("#meta__description").html( "The meta description is not set. Please add a <a href='https://github.com/doncabreraphone/victorhugo/blob/master/misc/hugo-seo-snippets.md'>meta description</a> to your post.").addClass('fix');
         }
-
 
         // CONTENT
         var victorhugo__content = "{{ .Content | lower }}";
@@ -1542,7 +1545,9 @@
     ">
 
     <ul style="list-style-type: none; margin: 0; padding: 0 15px;">
-      <li style="text-indent: -1rem;  margin: 15px 0;"><span style="font-size: 2rem; vertical-align: middle; line-height: 1.2rem; color: #dc3232">•</span> You forgot to add ".Params.Focus_Keyword" and ".Params.Victor_Hugo" in the front matter of this page.</li>
+
+    <li style="text-indent: -1rem;  margin: 15px 0;"><span style="font-size: 2rem; vertical-align: middle; line-height: 1.2rem; color: #dc3232">•</span> You forgot to add, either "Focus_Keyword", or "Victor_Hugo" params in the front matter of this page. <a href="https://github.com/doncabreraphone/victorhugo/#configure-victor-hugo" target="_blank">Read More.</a></li>
+
     </ul>
 
     <hr>
