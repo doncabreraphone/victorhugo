@@ -25,6 +25,8 @@
   Your browser does not support the video tag.
 </video>  -->
 
+*UPDATE* I am currently in the process of making Victor Hugo a standalone tool that can be used with any static website.
+
 ## Overview
 
 Victor Hugo is a SEO plugin for <a href="https://gohugo.io/">Hugo</a>, the world’s fastest framework for building websites. It audits your content as you write it and gives you an estimate based on best SEO practices, so you can improve your SERP (Search Engine Results Pages).
