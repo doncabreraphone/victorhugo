@@ -25,7 +25,7 @@
   Your browser does not support the video tag.
 </video>  -->
 
-<b>UPDATE I am currently in the process of making Victor Hugo a standalone tool that can be used with any static website.</b>
+<b><span style="color:red">•</span> UPDATE: I am currently in the process of making Victor Hugo a standalone tool that can be used with any static website.</b>
 
 ## Overview
 
