@@ -1446,7 +1446,9 @@
           <div id="victorhugo_google_snippet">
             {{ $victorhugo__slug := .RelPermalink }}
             {{  $victorhugo__slug := substr $victorhugo__slug 0 -1 }}
-            {{  $victorhugo__slug := substr $victorhugo__slug 1 200 }}
+            {{if gt (len $victorhugo__slug) 0 }}
+              {{ $victorhugo__slug := substr $victorhugo__slug 1 200 }}
+            {{ end }}  
             
             <p>Your post on Google</p>
             <div class="snippet_wrap column">
